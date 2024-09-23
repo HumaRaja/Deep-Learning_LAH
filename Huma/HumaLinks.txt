@@ -1,0 +1,168 @@
+https://antonin.cool/trackmania-ia-deeplearning-python-opencv-self-driving/
+https://github.com/trackmania-rl/tmrl
+
+UP = 0xC8
+DOWN = 0xD0
+LEFT = 0xCB
+RIGHT = 0xCD
+
+
+def draw_lines(img):
+    lines = cv2.HoughLinesP(img, 1, np.pi/180, 180, np.array([]), 250, 7)
+    if lines is not None:
+        for line in lines:
+            coords = line[0]
+            cv2.line(img, (coords[0],coords[1]), (coords[2],coords[3]),(255, 255, 255), 2)
+    return
+
+def process_img(printscreen):
+    processed_img = cv2.cvtColor(printscreen, cv2.COLOR_RGB2GRAY)
+    processed_img = cv2.Canny(processed_img, threshold1=200, threshold2=300)
+    gauss_img = cv2.GaussianBlur(processed_img,(5, 5), 0)
+    return gauss_img
+
+def roi(img):
+    vertices = np.array([[14,273],[259,219],[496,219],[799,251],[801,496],[677,494],[518,309],[269,311],[134,504],[7,500]])
+    mask = np.zeros_like(img)
+    cv2.fillPoly(mask, [vertices], 255)
+    masked_img = cv2.bitwise_and(img, mask)
+    return masked_img
+
+def screen_record():
+    while(True):
+        printscreen = np.array(ImageGrab.grab(bbox=(0,45,800,640)))
+        processed_img = process_img(printscreen)
+        masked_img = roi(processed_img)
+        draw_lines(masked_img)
+        cv2.imshow('Trackmania Self Driving car',masked_img)
+
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+            break
+
+screen_record()
+
+
+def sortSlopes(lines, img):
+    startleftx = []
+    endleftx = []
+    startlefty = []
+    endlefty = []
+    startrightx = []
+    endrightx = []
+    startrighty = []
+    endrighty = []
+    if lines is not None:
+        for line in lines:
+            coords = line[0]
+            if (coords[2] - coords[0]) != 0:  # Avoid division by 0
+                slope = (float(coords[3] - coords[1])) / \
+                    (float(coords[2] - coords[0]))
+                if (slope > 0.15 and slope < 0.5):
+                    cv2.line(img, (coords[0], coords[1]),
+                             (coords[2], coords[3]), (255, 255, 255), 2)
+                    startrightx.extend([coords[0]])
+                    endrightx.extend([coords[2]])
+                    startrighty.extend([coords[1]])
+                    endrighty.extend([coords[3]])
+                    print "Slope Right: " + str(slope)
+                elif (slope < -0.15 and slope > -0.5):
+                    cv2.line(img, (coords[0], coords[1]),
+                             (coords[2], coords[3]), (255, 255, 255), 2)
+                    startleftx.extend([coords[0]])
+                    endleftx.extend([coords[2]])
+                    startlefty.extend([coords[1]])
+                    endlefty.extend([coords[3]])
+                    print "Slope Left: " + str(slope)
+                else:
+                    print "Non extreme slope: " + str(slope)
+    return startleftx, endleftx, startlefty, endlefty, startrightx, endrightx, startrighty, endrighty
+
+
+
+def roi(img):
+    vertices = np.array([[0, HEIGHT * 0.455], [WIDTH / 3, HEIGHT * 0.365], [WIDTH * 0.62, HEIGHT * 0.365], [WIDTH - 1, HEIGHT * 0.41], [WIDTH - 1, HEIGHT * 0.82], [
+                        WIDTH * 0.84, HEIGHT * 0.83], [WIDTH * 0.64, HEIGHT / 2], [WIDTH / 3, HEIGHT / 2], [WIDTH * 0.16, HEIGHT * 0.83], [0, HEIGHT * 0.83]], dtype=np.int32)
+    mask = np.zeros_like(img)
+    cv2.fillPoly(mask, [vertices], 255)
+    masked_img = cv2.bitwise_and(img, mask)
+    return masked_img
+
+def drawLanes(startleftx, endleftx, startlefty, endlefty, startrightx, endrightx, startrighty, endrighty, img):
+    if len(startleftx) > 0 and len(startlefty) > 0:
+        avgStartLeftX = average(startleftx)
+        avgStartLeftY = average(startlefty)
+
+        avgEndLeftX = average(endleftx)
+        avgEndLeftY = average(endlefty)
+
+        cv2.line(img, (avgStartLeftX, avgStartLeftY),
+                 (avgEndLeftX, avgEndLeftY), (0, 255, 0), 2)
+
+    if len(startrightx) > 0 and len(startrighty) > 0:
+        avgStartRightX = average(startrightx)
+        avgStartRightY = average(startrighty)
+
+        avgEndRightX = average(endrightx)
+        avgEndRightY = average(endrighty)
+
+        cv2.line(img, (avgStartRightX, avgStartRightY),
+                 (avgEndRightX, avgEndRightY), (255, 0, 0), 2)
+
+
+
+def getMetaData(img):
+    # Get image dimensions
+    dimensions = img.shape
+    height = img.shape[0]
+    width = img.shape[1]
+
+    # Speed is at the bottom right, easy to grab
+    speedImg = img[int(height - (height * 0.05)):int(height),
+                   int(width - (width * 0.07)): int(width)].copy()
+
+    # Distance is at the bottom right, right above the speed, we just need to add some padding here
+    distanceHeightMultiplier = 0.05
+    distanceWidthMultiplier = 0.015
+    distanceImg = img[int(height - (height * (0.03 + distanceHeightMultiplier))):int(int(height - (height * distanceHeightMultiplier))),
+                      int(width - (width * (0.045 + distanceWidthMultiplier))): int(width - (width * distanceWidthMultiplier))].copy()
+
+    # Time is in the middle part of the screen at the bottom, roughly the same height as the speed
+    timeWidthMultiplier = 0.08
+    timeImg = img[int(height - (height * 0.07)):int(height),
+                  int(width - (width * (0.5 + timeWidthMultiplier))): int(width - (width * (0.5 - timeWidthMultiplier)))].copy()
+
+def getData(test, lowerThresh, blur):
+    # First add some gaussian blur to make the gap between the numbers smaller
+    test = cv2.GaussianBlur(test, (blur, blur), 0)
+    # Then convert the image to grayscale
+    test = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
+    # Use threshold to turn the image in black and white mode
+    (thresh, test) = cv2.threshold(
+        test, lowerThresh, 255, cv2.THRESH_BINARY)
+    #Finally invert the colors on the image since it appears that Tesseract is way better at reading black text on white background
+    test = (255-test)
+    cv2.imshow('Crop3', test)
+    return pytesseract.image_to_string(test, lang="7seg", config="--psm 13 -c tessedit_char_whitelist=\"0123456789\" --tessdata-dir \"" + os.path.dirname(os.path.abspath(__file__)) + "\letsgodigital\"")
+
+def getMetaData(img):
+    # Get image dimensions
+    height = img.shape[0]
+    width = img.shape[1]
+
+    # Speed is at the bottom right, easy to grab
+    speedImg = img[int(height - (height * 0.05)):int(height),
+                   int(width - (width * 0.08)): int(width)].copy()
+
+    # Distance is at the bottom right, right above the speed, we just need to add some padding here
+    distanceHeightMultiplier = 0.05
+    distanceWidthMultiplier = 0.015
+    distanceImg = img[int(height - (height * (0.03 + distanceHeightMultiplier))):int(int(height - (height * distanceHeightMultiplier))),
+                      int(width - (width * (0.045 + distanceWidthMultiplier))): int(width - (width * distanceWidthMultiplier))].copy()
+
+    speed = getData(speedImg, 150, 5)
+    speed = re.sub("\D", "", speed)
+    distance = getData(distanceImg, 170, 1)
+    distance = re.sub("\D", "", distance)
+
+    return speed, distance
