@@ -1,57 +1,54 @@
 from PIL import ImageGrab
 import keyboard
-import time
 import os
 
 # Define the base folder where screenshots will be saved
-save_folder = "Images"
+save_folder = "Screenshots"
 os.makedirs(save_folder, exist_ok=True)  # Create the base folder if it doesn't exist
 
 # Define the keys you're interested in for classification
-keys_of_interest = ['d', 'z', 'q']
+keys_of_interest = ['q', 'z', 'd']
 
 # Function to take a screenshot and save it in the corresponding folder
 def take_screenshot(key):
     # Check if the key is one of the keys we want to classify
     if key not in keys_of_interest:
         return
-    
+
     # Create a subfolder for the key press if it doesn't exist
-    key_folder = os.path.join(save_folder, key) 
+    key_folder = os.path.join(save_folder, key)
     os.makedirs(key_folder, exist_ok=True)
-    
-    # Capture the screenshot
-    screenshot = ImageGrab.grab()
-    
-    # Create a timestamp to make the filename unique
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    
-    # Save the screenshot in the corresponding subfolder
-    screenshot_filename = os.path.join(key_folder, f"{key}_{timestamp}.png")
+
+    # Capture the screenshot (you can pass a specific region, e.g., left half of the screen)
+    screenshot = ImageGrab.grab()  # Capture the full screen by default
+
+    # Get the screenshot count for this key
+    screenshot_count = len(os.listdir(key_folder)) + 1
+
+    # Save the screenshot in the corresponding subfolder with a numbered filename
+    screenshot_filename = os.path.join(key_folder, f"{key}{screenshot_count}.png")
     screenshot.save(screenshot_filename)
-    
+
     # Close the screenshot object
     screenshot.close()
 
     print(f"Screenshot saved as: {screenshot_filename} in folder: {key}")
 
 # Function to handle key press events
-def on_key_press(event):
-    key = event.name  # Get the key that was pressed
-    print(f"Key pressed: {key}")
-    
-    # Stop the program if the tab key is pressed
+def on_key_release(event):
+    key = event.name  # Get the key that was released
+    print(f"Key released: {key}")
+
+    # Stop the program if the alt key is pressed
     if key == "alt":
         print("Alt key pressed. Exiting the program safely...")
         keyboard.unhook_all()  # Stop listening for key presses
     else:
-        # Only take screenshots for 'z', 'q', 'd', or 's'
+        # Only take screenshots for 'z', 'q', or 'd'
         take_screenshot(key)
 
-# Hook the keyboard to detect key presses
-keyboard.on_press(on_key_press)
+# Hook the keyboard to detect key releases
+keyboard.on_release(on_key_release)
 
-# Keep the program running to listen for key presses
-keyboard.wait()  # This will keep the script running until manually stopped
-
-
+# The program runs indefinitely to listen for key releases
+keyboard.wait()
