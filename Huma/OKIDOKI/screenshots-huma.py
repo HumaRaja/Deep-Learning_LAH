@@ -7,7 +7,7 @@ save_folder = "Screenshots"
 os.makedirs(save_folder, exist_ok=True)  # Create the base folder if it doesn't exist
 
 # Define the keys you're interested in for classification
-keys_of_interest = ['q', 'z', 'd']
+keys_of_interest = ['z', 'd', 'q']
 
 # Function to take a screenshot and save it in the corresponding folder
 def take_screenshot(key):
