@@ -3,11 +3,11 @@ import keyboard
 import os
 
 # Define the base folder where screenshots will be saved
-save_folder = "Screenshots"
+save_folder = "Screenshots_new"
 os.makedirs(save_folder, exist_ok=True)  # Create the base folder if it doesn't exist
 
 # Define the keys you're interested in for classification
-keys_of_interest = ['z', 'd', 'q']
+keys_of_interest = ['d', 'q']
 
 # Function to take a screenshot and save it in the corresponding folder
 def take_screenshot(key):
