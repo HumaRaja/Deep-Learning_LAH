@@ -22,6 +22,7 @@ def take_screenshot(key):
     
     # Capture the screenshot
     screenshot = ImageGrab.grab()
+    #screenshot = ImageGrab.grab(bbox=(200, 300, 700, 200))
     
     # Create a timestamp to make the filename unique
     timestamp = time.strftime("%Y%m%d_%H%M%S")
