@@ -20,7 +20,7 @@ def rename_images(directory):
             time_part = match.group(2)
  
             # Create the new filename
-            new_file_name = f"d{count}_{date_part}_{time_part}.png"
+            new_file_name = f"d{count}.png"
  
             # Get full paths for renaming
             old_file_path = os.path.join(directory, file_name)
@@ -35,5 +35,5 @@ def rename_images(directory):
             count += 1
  
 # Example usage
-directory = '/path/to/your/images'
+directory = '/Screenshots/d'
 rename_images(directory)
