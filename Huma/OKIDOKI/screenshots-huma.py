@@ -3,11 +3,11 @@ import keyboard
 import os
 
 # Define the base folder where screenshots will be saved
-save_folder = "Screenshots"
+save_folder = "Liesa"
 os.makedirs(save_folder, exist_ok=True)  # Create the base folder if it doesn't exist
 
 # Define the keys you're interested in for classification
-keys_of_interest = ['d', 'q']
+keys_of_interest = [ 'd']
 
 # Function to take a screenshot and save it in the corresponding folder
 def take_screenshot(key):
@@ -20,10 +20,11 @@ def take_screenshot(key):
     os.makedirs(key_folder, exist_ok=True)
 
     # Capture the screenshot (you can pass a specific region, e.g., left half of the screen)
-    screenshot = ImageGrab.grab()  # Capture the full screen by default
+    #screenshot = ImageGrab.grab()  # Capture the full screen by default
+    screenshot = ImageGrab.grab(bbox=(0, 400, 1920, 655))
 
     # Get the screenshot count for this key
-    screenshot_count = len(os.listdir(key_folder)) + 1
+    screenshot_count = len(os.listdir(key_folder)) + 404
 
     # Save the screenshot in the corresponding subfolder with a numbered filename
     screenshot_filename = os.path.join(key_folder, f"{key}{screenshot_count}.png")
