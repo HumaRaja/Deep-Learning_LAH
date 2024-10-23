@@ -7,7 +7,7 @@ save_folder = "Liesa"
 os.makedirs(save_folder, exist_ok=True)  # Create the base folder if it doesn't exist
 
 # Define the keys you're interested in for classification
-keys_of_interest = [ 'd']
+keys_of_interest = ['q']
 
 # Function to take a screenshot and save it in the corresponding folder
 def take_screenshot(key):
@@ -24,7 +24,7 @@ def take_screenshot(key):
     screenshot = ImageGrab.grab(bbox=(0, 400, 1920, 655))
 
     # Get the screenshot count for this key
-    screenshot_count = len(os.listdir(key_folder)) + 404
+    screenshot_count = len(os.listdir(key_folder)) + 333
 
     # Save the screenshot in the corresponding subfolder with a numbered filename
     screenshot_filename = os.path.join(key_folder, f"{key}{screenshot_count}.png")
